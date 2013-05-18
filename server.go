@@ -39,13 +39,20 @@ func WriteGitToHttp(w http.ResponseWriter, args ...string) {
     log.Printf("Sent %d bytes to client.", n)
 }
 
-func getInfoRefs(route *Route, w http.ResponseWriter) {
+func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
     log.Printf("getInfoRefs for %s", route.RepoPath)
     // TODO: find repo path at route.RepoPath
-    WriteGitToHttp(w, "upload-pack", "--advertise-refs", ".")
+    WriteGitToHttp(w, "upload-pack", "--stateless-rpc", "--advertise-refs", ".")
 }
 
-type RouteFunc func (route *Route, w http.ResponseWriter)
+func getRepoFile(route *Route, w http.ResponseWriter, r *http.Request) {
+    log.Printf("getRepoFile for %s", route.RepoPath)
+
+    http.ServeFile(w, r, ".git/"+route.File)
+}
+
+
+type RouteFunc func (route *Route, w http.ResponseWriter, r *http.Request)
 type RouteMatcher struct {
     Matcher *regexp.Regexp
     Handler RouteFunc
@@ -57,8 +64,8 @@ type Route struct {
     MatchedRoute RouteMatcher
 }
 
-func (route *Route) Dispatch(w http.ResponseWriter) {
-    route.MatchedRoute.Handler(route, w)
+func (route *Route) Dispatch(w http.ResponseWriter, r *http.Request) {
+    route.MatchedRoute.Handler(route, w, r)
 }
 
 func NewParsedRoute(repoName string, file string, matcher RouteMatcher) *Route {
@@ -67,6 +74,7 @@ func NewParsedRoute(repoName string, file string, matcher RouteMatcher) *Route {
 
 var Routes = []RouteMatcher{
     RouteMatcher{Matcher: regexp.MustCompile("(.*?)/info/refs$"), Handler: getInfoRefs},
+    RouteMatcher{Matcher: regexp.MustCompile("(.*?)/HEAD$"), Handler: getRepoFile},
 }
 
 func MatchRoute(r *http.Request) *Route {
@@ -95,7 +103,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
     parsedRoute := MatchRoute(r)
     if parsedRoute != nil {
-        parsedRoute.Dispatch(w)
+        parsedRoute.Dispatch(w, r)
     }
 }
 
