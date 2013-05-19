@@ -3,6 +3,7 @@ package main
 import (
     "net/http"
     "log"
+    "fmt"
     "gitsrv"
 )
 
@@ -12,6 +13,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
     parsedRoute := gitsrv.MatchRoute(r)
     if parsedRoute != nil {
         parsedRoute.Dispatch(w, r)
+    } else {
+        fmt.Fprintf(w, "nothing to see here\n")
     }
 }
 
