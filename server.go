@@ -7,6 +7,7 @@ import (
     "strings"
     "log"
     "os/exec"
+    "io"
 )
 
 func WriteGitToHttp(w http.ResponseWriter, args ...string) {
@@ -25,23 +26,19 @@ func WriteGitToHttp(w http.ResponseWriter, args ...string) {
         return
     }
 
-    var n int
-    for i := 0; i < 32; i++ {
-        data := make([]byte, 256)
-        nbytes, e := stdout.Read(data)
-
-        if nbytes == 0 || e != nil {
-            break
-        }
-        n += nbytes
-        w.Write(data)
-    }
-    log.Printf("Sent %d bytes to client.", n)
+    io.Copy(w, stdout)
 }
+
 
 func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
     log.Printf("getInfoRefs for %s", route.RepoPath)
     // TODO: find repo path at route.RepoPath
+
+    w.Header().Set("Content-Type", "application/x-git-upload-pack-advertisement")
+
+    str := "# service=git-upload-pack"
+    fmt.Fprintf(w, "%.4x%s\n", len(str)+5, str )
+    fmt.Fprintf(w, "0000")
     WriteGitToHttp(w, "upload-pack", "--stateless-rpc", "--advertise-refs", ".")
 }
 
