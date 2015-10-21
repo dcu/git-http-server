@@ -14,6 +14,7 @@ var (
 	authUserFlag      = flag.String("auth.user", "", "Username for basic auth.")
 	authPassFlag      = flag.String("auth.pass", "", "Password for basic auth.")
 	reposRoot         = flag.String("repos.root", fmt.Sprintf("%s/repos", os.Getenv("HOME")), "The location of the repositories")
+	autoInitRepos     = flag.Bool("repos.autoinit", false, "Auto inits repositories on git-push")
 )
 
 func authMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +41,8 @@ func main() {
 	flag.Parse()
 
 	config := &gitserver.Config{
-		ReposRoot: *reposRoot,
+		ReposRoot:     *reposRoot,
+		AutoInitRepos: *autoInitRepos,
 	}
 
 	err := gitserver.Init(config)

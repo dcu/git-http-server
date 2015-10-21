@@ -14,15 +14,14 @@ type GitCommand struct {
 	args      []string
 }
 
-// WriteGitToHTTP copies the output of the git command to the http socket.
-func WriteGitToHTTP(w http.ResponseWriter, gitCommand GitCommand) {
+// Run runs the git command
+func (gitCommand *GitCommand) Run(wait bool) (io.ReadCloser, error) {
+	log.Printf("Executing: git %v", gitCommand.args)
 	cmd := exec.Command("git", gitCommand.args...)
 	stdout, err := cmd.StdoutPipe()
 
 	if err != nil {
-		w.WriteHeader(404)
-		log.Fatal("Error:", err)
-		return
+		return nil, err
 	}
 
 	if gitCommand.procInput != nil {
@@ -30,6 +29,23 @@ func WriteGitToHTTP(w http.ResponseWriter, gitCommand GitCommand) {
 	}
 
 	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	if wait {
+		err = cmd.Wait()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stdout, nil
+}
+
+// WriteGitToHTTP copies the output of the git command to the http socket.
+func WriteGitToHTTP(w http.ResponseWriter, gitCommand GitCommand) {
+	stdout, err := gitCommand.Run(false)
+	if err != nil {
 		w.WriteHeader(404)
 		log.Fatal("Error:", err)
 		return
