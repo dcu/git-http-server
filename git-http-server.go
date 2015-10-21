@@ -6,12 +6,14 @@ import (
 	"github.com/dcu/git-http-server/gitserver"
 	"log"
 	"net/http"
+	"os"
 )
 
 var (
 	listenAddressFlag = flag.String("web.listen-address", ":4000", "Address on which to listen to git requests.")
 	authUserFlag      = flag.String("auth.user", "", "Username for basic auth.")
 	authPassFlag      = flag.String("auth.pass", "", "Password for basic auth.")
+	reposRoot         = flag.String("repos.root", fmt.Sprintf("%s/repos", os.Getenv("HOME")), "The location of the repositories")
 )
 
 func authMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +38,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
+
+	config := &gitserver.Config{
+		ReposRoot: *reposRoot,
+	}
+
+	err := gitserver.Init(config)
+	if err != nil {
+		panic(err)
+	}
 
 	log.Printf("Starting server on localhost:4000")
 	app := gitserver.MiddlewareFunc(handler)
