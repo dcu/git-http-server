@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dcu/git-http-server/gitserver"
+	"github.com/dcu/http-einhorn"
 	"log"
 	"net/http"
 	"os"
@@ -37,7 +38,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "nothing to see here\n")
 }
 
-func main() {
+func httpHandler() *http.ServeMux {
+	app := gitserver.MiddlewareFunc(handler)
+	if hasUserAndPassword() {
+		app = authMiddleware(app)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", app)
+
+	return mux
+}
+
+func startHTTP() {
+	log.Printf("Starting server on %s", *listenAddressFlag)
+
+	mux := httpHandler()
+	if einhorn.IsRunning() {
+		einhorn.Start(mux, 0)
+	} else {
+		server := &http.Server{Handler: mux, Addr: *listenAddressFlag}
+		server.ListenAndServe()
+	}
+}
+
+func parseOptsAndBuildConfig() *gitserver.Config {
 	flag.Parse()
 
 	config := &gitserver.Config{
@@ -45,16 +70,16 @@ func main() {
 		AutoInitRepos: *autoInitRepos,
 	}
 
+	return config
+}
+
+func main() {
+	config := parseOptsAndBuildConfig()
+
 	err := gitserver.Init(config)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Starting server on localhost:4000")
-	app := gitserver.MiddlewareFunc(handler)
-	if hasUserAndPassword() {
-		app = authMiddleware(app)
-	}
-	http.HandleFunc("/", app)
-	http.ListenAndServe(*listenAddressFlag, nil)
+	startHTTP()
 }
