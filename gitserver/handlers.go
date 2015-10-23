@@ -45,6 +45,7 @@ func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
 	log.Printf("getInfoRefs for %s", repo)
 
 	serviceName := getServiceName(r)
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/x-git-"+serviceName+"-advertisement")
 
 	str := "# service=git-" + serviceName
@@ -68,6 +69,7 @@ func uploadPack(route *Route, w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("uploadPack for %s", repo)
 
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/x-git-upload-pack-result")
 
 	requestBody, err := ioutil.ReadAll(r.Body)
@@ -87,6 +89,7 @@ func receivePack(route *Route, w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("receivePack for %s", repo)
 
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/x-git-receive-pack-result")
 
 	requestBody, err := ioutil.ReadAll(r.Body)

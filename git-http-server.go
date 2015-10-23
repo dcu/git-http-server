@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dcu/git-http-server/gitserver"
 	"github.com/dcu/http-einhorn"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +23,7 @@ func authMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, password, ok := r.BasicAuth()
 		if !ok || password != *authPassFlag || user != *authUserFlag {
-			w.Header().Set("WWW-Authenticate", "Basic realm=\"metrics\"")
+			w.Header().Set("WWW-Authenticate", "Basic realm=\"git-server\"")
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		} else {
 			next(w, r)
@@ -34,31 +35,35 @@ func hasUserAndPassword() bool {
 	return *authUserFlag != "" && *authPassFlag != ""
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "nothing to see here\n")
+func handler(c *gin.Context) {
+	c.String(200, "nothing to see here\n")
 }
 
-func httpHandler() *http.ServeMux {
-	app := gitserver.MiddlewareFunc(handler)
-	if hasUserAndPassword() {
-		app = authMiddleware(app)
+func gitserverHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		parsedRoute := gitserver.MatchRoute(c.Request)
+		if parsedRoute != nil {
+			parsedRoute.Dispatch(c.Writer, c.Request)
+		} else {
+			c.Next()
+		}
 	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app)
-
-	return mux
 }
 
 func startHTTP() {
 	log.Printf("Starting server on %s", *listenAddressFlag)
 
-	mux := httpHandler()
+	router := gin.Default()
+	if hasUserAndPassword() {
+		router.Use(gin.BasicAuth(gin.Accounts{*authUserFlag: *authPassFlag}))
+	}
+	router.Use(gitserverHandler())
+	router.GET("/", handler)
+
 	if einhorn.IsRunning() {
-		einhorn.Start(mux, 0)
+		einhorn.Start(router, 0)
 	} else {
-		server := &http.Server{Handler: mux, Addr: *listenAddressFlag}
-		server.ListenAndServe()
+		router.Run(*listenAddressFlag)
 	}
 }
 
