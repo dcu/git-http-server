@@ -21,9 +21,9 @@ angular
   .config ($routeProvider) ->
     $routeProvider
       .when '/',
-        templateUrl: 'views/main.html'
-        controller: 'MainCtrl'
-        controllerAs: 'main'
+        templateUrl: 'views/repositories.html'
+        controller: 'RepositoriesCtrl'
+        controllerAs: 'repositories'
       .when '/about',
         templateUrl: 'views/about.html'
         controller: 'AboutCtrl'

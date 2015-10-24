@@ -1,0 +1,10 @@
+<div class="row marketing">
+    <h4>Repositories</h4>
+    <ul class="repositories">
+        <li ng-repeat="repo in repositories.items">
+            {{repo.name}}
+            {{repo.last_commit.subject}}
+        </li>
+    </ul>
+</div>
+

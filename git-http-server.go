@@ -7,6 +7,7 @@ import (
 	"github.com/dcu/git-http-server/gitserver"
 	"github.com/dcu/http-einhorn"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
@@ -51,6 +52,14 @@ func gitserverHandler() gin.HandlerFunc {
 	}
 }
 
+func corsHandler() gin.HandlerFunc {
+	handler := cors.Default()
+	return func(c *gin.Context) {
+		handler.HandlerFunc(c.Writer, c.Request)
+		c.Next()
+	}
+}
+
 func startHTTP() {
 	log.Printf("Starting server on %s", *listenAddressFlag)
 
@@ -59,6 +68,7 @@ func startHTTP() {
 		router.Use(gin.BasicAuth(gin.Accounts{*authUserFlag: *authPassFlag}))
 	}
 	router.Use(gitserverHandler())
+	router.Use(corsHandler())
 	router.GET("/", handler)
 	api.SetupRouter(router)
 
