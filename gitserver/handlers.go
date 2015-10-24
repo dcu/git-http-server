@@ -12,7 +12,12 @@ import (
 	"strings"
 )
 
-func absoluteRepoPath(relativePath string) (string, error) {
+// AbsoluteRepoPath returns the absolute path for the given relative repository path
+func AbsoluteRepoPath(relativePath string) (string, error) {
+	if !strings.HasSuffix(relativePath, ".git") {
+		relativePath += ".git"
+	}
+
 	path := fmt.Sprintf("%s/%s", gServerConfig.ReposRoot, relativePath)
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
@@ -27,7 +32,7 @@ func absoluteRepoPath(relativePath string) (string, error) {
 }
 
 func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
-	repo, err := absoluteRepoPath(route.RepoPath)
+	repo, err := AbsoluteRepoPath(route.RepoPath)
 	if err != nil {
 		w.WriteHeader(404)
 		return
@@ -63,7 +68,7 @@ func getServiceName(r *http.Request) string {
 }
 
 func uploadPack(route *Route, w http.ResponseWriter, r *http.Request) {
-	repo, err := absoluteRepoPath(route.RepoPath)
+	repo, err := AbsoluteRepoPath(route.RepoPath)
 	if err != nil {
 		return
 	}
@@ -83,7 +88,7 @@ func uploadPack(route *Route, w http.ResponseWriter, r *http.Request) {
 }
 
 func receivePack(route *Route, w http.ResponseWriter, r *http.Request) {
-	repo, err := absoluteRepoPath(route.RepoPath)
+	repo, err := AbsoluteRepoPath(route.RepoPath)
 	if err != nil {
 		return
 	}

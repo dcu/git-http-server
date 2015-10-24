@@ -7,4 +7,5 @@ import (
 // SetupRouter setup api routes
 func SetupRouter(router *gin.Engine) {
 	router.GET("/repositories", listRepos)
+	router.GET("/repositories/*path", showRepo)
 }

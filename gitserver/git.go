@@ -45,7 +45,7 @@ func (gitCommand *GitCommand) Run(wait bool) (io.ReadCloser, error) {
 
 // RunAndGetOutput runs the command and gets the output
 func (gitCommand *GitCommand) RunAndGetOutput() []byte {
-	stdout, err := gitCommand.Run(true)
+	stdout, err := gitCommand.Run(false)
 	if err != nil {
 		return []byte{}
 	}
