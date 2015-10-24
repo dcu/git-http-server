@@ -34,7 +34,7 @@ func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if gServerConfig.AutoInitRepos && !repoExists(repo) {
-		cmd := GitCommand{args: []string{"init", "--bare", repo}}
+		cmd := GitCommand{Args: []string{"init", "--bare", repo}}
 		_, err := cmd.Run(true)
 		if err != nil {
 			w.WriteHeader(404)
@@ -51,7 +51,7 @@ func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
 	str := "# service=git-" + serviceName
 	fmt.Fprintf(w, "%.4x%s\n", len(str)+5, str)
 	fmt.Fprintf(w, "0000")
-	WriteGitToHTTP(w, GitCommand{args: []string{serviceName, "--stateless-rpc", "--advertise-refs", repo}})
+	WriteGitToHTTP(w, GitCommand{Args: []string{serviceName, "--stateless-rpc", "--advertise-refs", repo}})
 }
 
 func getServiceName(r *http.Request) string {
@@ -79,7 +79,7 @@ func uploadPack(route *Route, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteGitToHTTP(w, GitCommand{procInput: bytes.NewReader(requestBody), args: []string{"upload-pack", "--stateless-rpc", repo}})
+	WriteGitToHTTP(w, GitCommand{ProcInput: bytes.NewReader(requestBody), Args: []string{"upload-pack", "--stateless-rpc", repo}})
 }
 
 func receivePack(route *Route, w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func receivePack(route *Route, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteGitToHTTP(w, GitCommand{procInput: bytes.NewReader(requestBody), args: []string{"receive-pack", "--stateless-rpc", repo}})
+	WriteGitToHTTP(w, GitCommand{ProcInput: bytes.NewReader(requestBody), Args: []string{"receive-pack", "--stateless-rpc", repo}})
 }
 
 func repoExists(name string) bool {

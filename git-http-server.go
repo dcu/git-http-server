@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/dcu/git-http-server/api"
 	"github.com/dcu/git-http-server/gitserver"
 	"github.com/dcu/http-einhorn"
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,7 @@ func startHTTP() {
 	}
 	router.Use(gitserverHandler())
 	router.GET("/", handler)
+	api.SetupRouter(router)
 
 	if einhorn.IsRunning() {
 		einhorn.Start(router, 0)
