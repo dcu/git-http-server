@@ -17,8 +17,11 @@ var (
 	listenAddressFlag = flag.String("web.listen-address", ":4000", "Address on which to listen to git requests.")
 	authUserFlag      = flag.String("auth.user", "", "Username for basic auth.")
 	authPassFlag      = flag.String("auth.pass", "", "Password for basic auth.")
-	reposRoot         = flag.String("repos.root", fmt.Sprintf("%s/repos", os.Getenv("HOME")), "The location of the repositories")
-	autoInitRepos     = flag.Bool("repos.autoinit", false, "Auto inits repositories on git-push")
+	reposRoot         = flag.String("repos.root", fmt.Sprintf("%s/repos", os.Getenv("HOME")), "The location of the repositories.")
+	autoInitRepos     = flag.Bool("repos.autoinit", false, "Auto inits repositories on git-push.")
+	reposPath         = flag.String("web.ui_path", "/repos", "HTTP path where repos UI can be found.")
+	disableUI         = flag.Bool("web.disable_ui", false, "Disables web UI")
+	disableCors       = flag.Bool("web.disable_cors", false, "Disables Cross-Origin Resource Sharing")
 )
 
 func authMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +41,12 @@ func hasUserAndPassword() bool {
 }
 
 func handler(c *gin.Context) {
-	c.String(200, "nothing to see here\n")
+	if !*disableUI {
+		c.Redirect(http.StatusTemporaryRedirect, *reposPath)
+	} else {
+
+		c.String(200, "nothing to see here\n")
+	}
 }
 
 func gitserverHandler() gin.HandlerFunc {
@@ -68,8 +76,16 @@ func startHTTP() {
 		router.Use(gin.BasicAuth(gin.Accounts{*authUserFlag: *authPassFlag}))
 	}
 	router.Use(gitserverHandler())
-	router.Use(corsHandler())
+
+	if !*disableCors {
+		router.Use(corsHandler())
+	}
+
+	if !*disableUI {
+		router.StaticFS(*reposPath, http.Dir("./public/"))
+	}
 	router.GET("/", handler)
+
 	api.SetupRouter(router)
 
 	if einhorn.IsRunning() {

@@ -2,7 +2,7 @@
     <h4>Repositories</h4>
     <ul class="repositories">
         <li ng-repeat="repo in repositories.items">
-            <a href="#/r{{repo.name}}">{{repo.name}}</a>
+            <a href="#/r/{{repo.name}}">{{repo.name}}</a>
             {{repo.last_commit.subject}}
         </li>
     </ul>
