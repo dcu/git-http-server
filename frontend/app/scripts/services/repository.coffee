@@ -14,3 +14,7 @@ angular.module 'frontendApp'
     all: (successCallback, errorCallback) ->
         $http({method: "GET", url: "#{ServerURL}/repositories"}).then(successCallback, errorCallback)
 
+    find: (path, successCallback, errorCallback) ->
+        $http({method: "GET", url: "#{ServerURL}/repositories/#{path}"}).then(successCallback, errorCallback)
+
+

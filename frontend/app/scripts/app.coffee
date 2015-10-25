@@ -24,6 +24,10 @@ angular
         templateUrl: 'views/repositories.html'
         controller: 'RepositoriesCtrl'
         controllerAs: 'repositories'
+      .when '/r/:path*',
+        templateUrl: 'views/details.html'
+        controller: 'DetailsCtrl'
+        controllerAs: 'details'
       .when '/about',
         templateUrl: 'views/about.html'
         controller: 'AboutCtrl'
