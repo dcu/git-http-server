@@ -15,6 +15,7 @@ angular.module 'frontendApp'
             (response) ->
                 $scope.details = response.data
                 $scope.details.readme_html = $showdown.makeHtml($scope.details.readme)
+                $scope.details.repo_url = "#{window.location.protocol}//#{window.location.host}/#{$scope.details.repository.name}.git"
         ,
             (response) ->
                 console.log(response)

@@ -1,8 +1,26 @@
 
 <a href="/#/">back</a>
 
+<div id="clone">
+    Clone repository:
+    <code>
+        git clone {{details.repo_url}}
+    </code>
+</div>
+<div id="remote">
+    Add repository as remote:
+    <code>
+        git remote add origin {{details.repo_url}}
+    </code>
+</div>
+<div id="push">
+    Push your code to the repository:
+    <code>
+        git push {{details.repo_url}} master
+    </code>
+</div>
 
-<div id="#readme" ng-bind-html="details.readme_html">
+<div id="readme" ng-bind-html="details.readme_html">
 </div>
 
 
