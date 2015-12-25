@@ -8,13 +8,18 @@
  # Factory in the frontendApp.
 ###
 angular.module 'frontendApp'
-  .factory 'Repository', ($http, ApiConfig) ->
+  .factory 'Repository', ($http, $showdown, ApiConfig) ->
 
     # Public API here
     all: (successCallback, errorCallback) ->
         $http({method: "GET", url: "#{ApiConfig.url}/repositories"}).then(successCallback, errorCallback)
 
     find: (path, successCallback, errorCallback) ->
-        $http({method: "GET", url: "#{ApiConfig.url}/repositories/#{path}"}).then(successCallback, errorCallback)
+        $http({method: "GET", url: "#{ApiConfig.url}/repositories/#{path}"}).then(
+            (response) -> 
+                response.data.readme_html = $showdown.makeHtml(response.data.readme)
+                successCallback(response)
+        , 
+            errorCallback)
 
 

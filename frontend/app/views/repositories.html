@@ -1,10 +1,22 @@
-<div class="row marketing">
-    <h4>Repositories</h4>
-    <ul class="repositories">
-        <li ng-repeat="repo in repositories.items">
-            <a href="#/r/{{repo.name}}">{{repo.name}}</a>
-            {{repo.last_commit.subject}}
-        </li>
-    </ul>
+<md-sidenav layout="column" class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="$mdMedia('gt-sm')">
+    <md-list class="muppet-list">
+        <md-item ng-repeat="it in repositories.items">
+            <md-item-content>
+                <md-button ng-click="selectRepository(it)" ng-class="{'selected' : it === selected }">
+                    {{it.name}}
+                </md-button>
+            </md-item-content>
+        </md-item>
+    </md-list>
+</md-sidenav>
+<div layout="column" flex class="content-wrapper" id="primary-col">
+    <md-content layout="column" flex class="md-padding">
+        <h2>{{selected.name}}</h2>
+        <p ng-bind-html="selected.readme_html"></p>
+        <div class="cell">
+            <img ng-src="{{selected.imgurl}}" alt="{{selected.imgalt}}">
+        </div>
+    </md-content>
 </div>
+
 

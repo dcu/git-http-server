@@ -17,7 +17,8 @@ angular
     'ngRoute',
     'ngSanitize',
     'ngTouch',
-    'ng-showdown'
+    'ng-showdown',
+    'ngMaterial'
   ]
   .config ($routeProvider) ->
     $routeProvider
