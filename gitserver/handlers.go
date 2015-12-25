@@ -107,6 +107,14 @@ func receivePack(route *Route, w http.ResponseWriter, r *http.Request) {
 	WriteGitToHTTP(w, GitCommand{ProcInput: bytes.NewReader(requestBody), Args: []string{"receive-pack", "--stateless-rpc", repo}})
 }
 
+func goGettable(route *Route, w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "text/html")
+
+	url := fmt.Sprintf("%s%s", r.Host, r.URL.Path)
+	fmt.Fprintf(w, `<html><head><meta name="go-import" content="%s git https://%s"></head><body>go get %s</body></html>`, url, url, url)
+}
+
 func repoExists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)

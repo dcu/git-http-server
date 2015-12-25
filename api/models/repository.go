@@ -38,7 +38,12 @@ func (repo *Repository) ToPublicResponse() map[string]interface{} {
 
 // LastCommit returns the last commit on this repository
 func (repo *Repository) LastCommit() *Commit {
-	return repo.GetCommitsFromBranch("HEAD", 1)[0]
+	commits := repo.GetCommitsFromBranch("HEAD", 1)
+	if len(commits) > 0 {
+		return commits[0]
+	}
+
+	return nil
 }
 
 // Name returns the name of the repository
