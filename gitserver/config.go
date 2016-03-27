@@ -14,8 +14,8 @@ type ReposConfig struct {
 
 // UIConfig is the config of the UI
 type UIConfig struct {
-	Username  string `yaml:"username"`
-	Password  string `yaml:"password"`
+	Username  string `yaml:"username,omitempty"`
+	Password  string `yaml:"password,omitempty"`
 	Path      string `yaml:"path"`
 	DisableUI bool   `yaml:"disable"`
 }
@@ -33,6 +33,38 @@ func (config *Config) HasAuth() bool {
 	return config.UI.Username != "" && config.UI.Password != ""
 }
 
+// WriteToPath writes the config to the given filePath
+func (config *Config) WriteToPath(filePath string) {
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(filePath, data, 0600)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// WriteSampleConfig writes a default config to the given path
+func WriteSampleConfig(path string) {
+	config := Config{
+		Host:       ":4000",
+		EnableCORS: true,
+		Repos: &ReposConfig{
+			AutoInit: true,
+			Path:     "/tmp/repos",
+		},
+		UI: &UIConfig{
+			Username:  "admin",
+			Password:  "admin",
+			Path:      "/repos",
+			DisableUI: false,
+		},
+	}
+	config.WriteToPath(path)
+}
+
 func LoadConfig(path string) *Config {
 	config := &Config{}
 
@@ -40,7 +72,10 @@ func LoadConfig(path string) *Config {
 	if err != nil {
 		panic(err)
 	}
-	yaml.Unmarshal(data, config)
+	err = yaml.Unmarshal(data, config)
+	if err != nil {
+		panic(err)
+	}
 
 	return config
 }

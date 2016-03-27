@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	gConfig *gitserver.Config = nil
+	gConfig           *gitserver.Config = nil
+	defaultConfigPath string            = "config.yml"
 )
 
 func handler(c *gin.Context) {
@@ -77,6 +78,11 @@ func parseOptsAndBuildConfig() *gitserver.Config {
 	args := flag.Args()
 
 	if len(args) < 1 {
+		if _, err := os.Stat(defaultConfigPath); os.IsNotExist(err) {
+			fmt.Printf("Writing sample config to %s\n", defaultConfigPath)
+			gitserver.WriteSampleConfig(defaultConfigPath)
+		}
+
 		flag.Usage()
 	}
 
@@ -99,6 +105,7 @@ func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: git-http-server <config.yml>\n")
 		flag.PrintDefaults()
+
 		os.Exit(1)
 	}
 }
