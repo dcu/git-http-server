@@ -1,0 +1,11 @@
+host: ":4000"
+cors: true
+repos:
+    path: /path/to/repos
+    autoinit: false
+ui:
+    username: ""
+    password: ""
+    path: "/repos"
+    disable: false
+

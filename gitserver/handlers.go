@@ -18,7 +18,7 @@ func AbsoluteRepoPath(relativePath string) (string, error) {
 		relativePath += ".git"
 	}
 
-	path := fmt.Sprintf("%s/%s", gServerConfig.ReposRoot, relativePath)
+	path := fmt.Sprintf("%s/%s", gServerConfig.Repos.Path, relativePath)
 	absolutePath, err := filepath.Abs(path)
 	if err != nil {
 		return "", err
@@ -38,7 +38,7 @@ func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if gServerConfig.AutoInitRepos && !repoExists(repo) {
+	if gServerConfig.Repos.AutoInit && !repoExists(repo) {
 		cmd := GitCommand{Args: []string{"init", "--bare", repo}}
 		_, err := cmd.Run(true)
 		if err != nil {
