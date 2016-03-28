@@ -7,9 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/dcu/go-authy"
 )
 
 // AbsoluteRepoPath returns the absolute path for the given relative repository path
@@ -25,7 +29,7 @@ func AbsoluteRepoPath(relativePath string) (string, error) {
 	}
 
 	if strings.Contains(path, "..") {
-		return "", errors.New("Invalid repo path.")
+		return "", errors.New("invalid repo path")
 	}
 
 	return absolutePath, nil
@@ -50,6 +54,17 @@ func getInfoRefs(route *Route, w http.ResponseWriter, r *http.Request) {
 	log.Printf("getInfoRefs for %s", repo)
 
 	serviceName := getServiceName(r)
+
+	message := messageFromService(serviceName, route.RepoPath)
+	details := authy.Details{
+		"repo": repo,
+		"ip":   r.RemoteAddr,
+	}
+	if !approveTransaction(message, details) {
+		w.WriteHeader(403)
+		return
+	}
+
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/x-git-"+serviceName+"-advertisement")
 
@@ -118,4 +133,53 @@ func goGettable(route *Route, w http.ResponseWriter, r *http.Request) {
 func repoExists(name string) bool {
 	_, err := os.Stat(name)
 	return !os.IsNotExist(err)
+}
+
+func approveTransaction(message string, details authy.Details) bool {
+	if !gServerConfig.HasAuthy() {
+		// Ignore request.
+		return true
+	}
+
+	authyAPI := authy.NewAuthyAPI(gServerConfig.Authy.APIKey)
+	request, err := authyAPI.SendApprovalRequest(gServerConfig.Authy.UserID, message, details, url.Values{"seconds_to_expire": {"45"}})
+	if err != nil {
+		return false
+	}
+
+	time.Sleep(10 * time.Second)
+	for i := 0; i < 20; i++ {
+		request, err = authyAPI.FindApprovalRequest(request.UUID, url.Values{})
+
+		if err != nil {
+			break
+		}
+
+		// pending approved denied expired
+		if request.Status == "pending" {
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		if request.Status == "approved" {
+			return true
+		}
+
+		break
+	}
+
+	return false
+}
+
+func messageFromService(service string, repo string) string {
+	message := ""
+	if service == "receive-pack" {
+		message = "Push to " + repo
+	} else if service == "upload-pack" {
+		message = "Fetch from " + repo
+	} else {
+		message = "Unknown service " + service + " for " + repo
+	}
+
+	return message
 }

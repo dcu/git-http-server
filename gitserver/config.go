@@ -20,17 +20,29 @@ type UIConfig struct {
 	DisableUI bool   `yaml:"disable"`
 }
 
+// AuthyConfig is the config for the Authy 2FA service
+type AuthyConfig struct {
+	APIKey string `yaml:"api_key"`
+	UserID string `yaml:"user_id"`
+}
+
 // Config stores the config of the git server
 type Config struct {
 	Host       string       `yaml:"host"`
 	EnableCORS bool         `yaml:"cors"`
 	Repos      *ReposConfig `yaml:"repos"`
 	UI         *UIConfig    `yaml:"ui"`
+	Authy      *AuthyConfig `yaml:"authy"`
 }
 
 // HasAuth returns whether the auth is configured or not.
 func (config *Config) HasAuth() bool {
 	return config.UI.Username != "" && config.UI.Password != ""
+}
+
+// HasAuthy returns true if Authy is configured.
+func (config *Config) HasAuthy() bool {
+	return config.Authy != nil && config.Authy.APIKey != "" && config.Authy.UserID != ""
 }
 
 // WriteToPath writes the config to the given filePath
@@ -61,10 +73,15 @@ func WriteSampleConfig(path string) {
 			Path:      "/repos",
 			DisableUI: false,
 		},
+		Authy: &AuthyConfig{
+			APIKey: "",
+			UserID: "",
+		},
 	}
 	config.WriteToPath(path)
 }
 
+// LoadConfig loads the config from the given path
 func LoadConfig(path string) *Config {
 	config := &Config{}
 
