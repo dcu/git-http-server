@@ -10,10 +10,15 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dcu/go-authy"
+)
+
+var (
+	oneTouchExpiresAfter = 45 * time.Second
 )
 
 // AbsoluteRepoPath returns the absolute path for the given relative repository path
@@ -142,33 +147,24 @@ func approveTransaction(message string, details authy.Details) bool {
 	}
 
 	authyAPI := authy.NewAuthyAPI(gServerConfig.Authy.APIKey)
-	request, err := authyAPI.SendApprovalRequest(gServerConfig.Authy.UserID, message, details, url.Values{"seconds_to_expire": {"45"}})
+	request, err := authyAPI.SendApprovalRequest(
+		gServerConfig.Authy.UserID,
+		message,
+		details,
+		url.Values{
+			"seconds_to_expire": {strconv.FormatInt(int64(oneTouchExpiresAfter), 10)},
+		},
+	)
 	if err != nil {
 		return false
 	}
 
-	time.Sleep(10 * time.Second)
-	for i := 0; i < 20; i++ {
-		request, err = authyAPI.FindApprovalRequest(request.UUID, url.Values{})
-
-		if err != nil {
-			break
-		}
-
-		// pending approved denied expired
-		if request.Status == "pending" {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		if request.Status == "approved" {
-			return true
-		}
-
-		break
+	status, err := authyAPI.WaitForApprovalRequest(request.UUID, oneTouchExpiresAfter, url.Values{})
+	if err != nil {
+		return false
 	}
 
-	return false
+	return status == authy.OneTouchStatusApproved
 }
 
 func messageFromService(service string, repo string) string {
