@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	gConfig           *gitserver.Config = nil
-	defaultConfigPath string            = "config.yml"
+	gConfig           *gitserver.Config
+	defaultConfigPath = "config.yml"
 )
 
 func handler(c *gin.Context) {
@@ -73,7 +73,7 @@ func startHTTP() {
 	}
 }
 
-func parseOptsAndBuildConfig() *gitserver.Config {
+func parseOptsAndBuildConfig() (*gitserver.Config, error) {
 	flag.Parse()
 	args := flag.Args()
 
@@ -86,18 +86,23 @@ func parseOptsAndBuildConfig() *gitserver.Config {
 		flag.Usage()
 	}
 
-	config := gitserver.LoadConfig(args[0])
-	return config
+	return gitserver.LoadConfig(args[0])
 }
 
 func main() {
-	gConfig = parseOptsAndBuildConfig()
-
-	err := gitserver.Init(gConfig)
+	config, err := parseOptsAndBuildConfig()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Error loading config file: %s\n", err.Error())
+		return
 	}
 
+	err = gitserver.Init(config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing config server: %s\n", err.Error())
+		return
+	}
+
+	gConfig = config
 	startHTTP()
 }
 

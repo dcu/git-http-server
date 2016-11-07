@@ -82,17 +82,17 @@ func WriteSampleConfig(path string) {
 }
 
 // LoadConfig loads the config from the given path
-func LoadConfig(path string) *Config {
+func LoadConfig(path string) (*Config, error) {
 	config := &Config{}
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = yaml.Unmarshal(data, config)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return config
+	return config, nil
 }
