@@ -1,0 +1,9 @@
+package: github.com/dcu/git-http-server
+import:
+- package: github.com/dcu/go-authy
+- package: github.com/dcu/http-einhorn
+- package: github.com/gin-gonic/gin
+  version: ~1.1.4
+- package: github.com/rs/cors
+  version: ~1.0.0
+- package: gopkg.in/yaml.v2
